@@ -36,7 +36,7 @@ $regions = [
   <header class="topbar">
     <div class="wrap nav">
       <h1>Langit Biru Nusantara</h1>
-      <nav>
+      <button id="menuBtn" class="menu-btn">☰ Menu</button><nav>
         <a href="#tari">Tari</a>
         <a href="#peta">Peta</a>
         <a href="#event">Festival</a>
@@ -73,27 +73,13 @@ $regions = [
     </div>
   </section>
 
-  <section id="tari" class="wrap section">
-    <h3>Tari Populer</h3>
-    <input id="search" placeholder="Cari tari...">
-    <div id="tariList" class="cards" style="margin-top:14px">
-      <?php foreach($popular as $t): ?>
-        <article class="card">
-          <img src="<?=htmlspecialchars($t['gambar'])?>" loading="lazy">
-          <div>
-            <h4><?=htmlspecialchars($t['nama_tari'])?></h4>
-            <small><?=htmlspecialchars($t['provinsi'])?> • <?=htmlspecialchars($t['kategori'])?></small>
-          </div>
-        </article>
-      <?php endforeach; ?>
-    </div>
-  </section>
+  <section id="tari" class="wrap section"><h3>Tari Populer (Auto Carousel)</h3><div id="tariTrack" class="carousel-track"><?php foreach($popular as $t): ?><article class="card"><img src="<?=htmlspecialchars($t['gambar'])?>" loading="lazy"><div><h4><?=htmlspecialchars($t['nama_tari'])?></h4><small><?=htmlspecialchars($t['provinsi'])?> • <?=htmlspecialchars($t['kategori'])?></small></div></article><?php endforeach; ?></div></section>
 
   <section id="peta" class="wrap section">
     <h3>Peta Budaya Indonesia (Google Maps + Titik Pulau)</h3>
     <div class="mapbox">
       <iframe src="https://maps.google.com/maps?q=Indonesia&t=k&z=4&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
-      <div class="dots">
+      <div class="dots"><button class='dot' data-k='all'>● ALL</button>
         <?php foreach($regions as $r): ?>
           <button class="dot" data-k="<?=$r['k']?>">● <?=$r['n']?></button>
         <?php endforeach; ?>
@@ -106,7 +92,7 @@ $regions = [
     <h3>Perwakilan Tari Tiap Pulau</h3>
     <div class="cards">
       <?php foreach($regions as $r): ?>
-        <article class="card region" id="<?=$r['k']?>">
+        <article class="card region" data-k="<?=$r['k']?>" id="<?=$r['k']?>">
           <img src="<?=$r['i']?>" loading="lazy">
           <div>
             <h4><?=$r['n']?> — <?=$r['t']?></h4>
