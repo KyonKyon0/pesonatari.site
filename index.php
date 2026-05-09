@@ -5,6 +5,7 @@ $pdo = new PDO('mysql:host=127.0.0.1;dbname=sql_pesonatari_site;charset=utf8mb4'
  PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC
 ]);
 $popular = $pdo->query('SELECT * FROM tari ORDER BY id DESC LIMIT 8')->fetchAll();
+if(!$popular){$popular=[['nama_tari'=>'Tari Saman','provinsi'=>'Aceh','kategori'=>'Tradisional','gambar'=>'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=70'],['nama_tari'=>'Tari Kecak','provinsi'=>'Bali','kategori'=>'Pertunjukan','gambar'=>'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=900&q=70'],['nama_tari'=>'Tari Yospan','provinsi'=>'Papua','kategori'=>'Modern Tradisi','gambar'=>'https://images.unsplash.com/photo-1526779259212-939e64788e3c?auto=format&fit=crop&w=900&q=70']];}
 $events = $pdo->query('SELECT * FROM event ORDER BY tanggal ASC LIMIT 6')->fetchAll();
 ?><!doctype html>
 <html lang="id">
@@ -62,7 +63,7 @@ $events = $pdo->query('SELECT * FROM event ORDER BY tanggal ASC LIMIT 6')->fetch
       <div id="slides" class="slides">
         <?php foreach($popular as $t): ?>
         <article class="dance-card">
-          <img src="<?=htmlspecialchars($t['gambar'])?>" alt="<?=htmlspecialchars($t['nama_tari'])?>" loading="lazy">
+          <img src="<?=htmlspecialchars($t['gambar']?:'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=70')?>" alt="<?=htmlspecialchars($t['nama_tari'])?>" loading="lazy">
           <div class="dance-body">
             <h4><?=htmlspecialchars($t['nama_tari'])?></h4>
             <small><?=htmlspecialchars($t['provinsi'])?> • <?=htmlspecialchars($t['kategori'])?></small>
