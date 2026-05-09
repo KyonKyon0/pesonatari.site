@@ -1,23 +1,18 @@
 # Langit Biru Nusantara
+Portal budaya Hari Tari Nasional Indonesia (PHP Native + MariaDB) yang ringan, premium, dan siap aaPanel.
 
-Portal budaya fullstack ringan (PHP Native + MariaDB) siap aaPanel.
-
-## Kredensial DB (sesuai foto aaPanel)
-- Database: `sql_pesonatari_site`
-- Username: `sql_pesonatari_site`
+## Kredensial Database (sesuai panel)
+- DB: `sql_pesonatari_site`
+- User: `sql_pesonatari_site`
 - Password: `dcbf4afe83baa8`
 
-Atur di `app/config/config.php`.
+## Fitur
+- Homepage premium: hero video, countdown, tari populer, peta interaktif, tentang, video tari, top vote, artikel budaya, komentar.
+- User: cari tari AJAX, favorit, vote, pesan tiket, pembayaran + upload bukti.
+- Admin: sidebar dashboard, kelola tari, kelola event, kelola tiket/user.
 
-## Deploy aaPanel/XAMPP
-1. Import `sql/schema.sql`.
-2. Upload folder project.
-3. Set document root ke `public/`.
-4. Aktifkan PHP 8+ extension: `pdo_mysql`, `gd`, `fileinfo`.
-
-## Optimasi
-- CSS/JS minified terpisah.
-- Prepared statement + index DB.
-- Lazy loading image.
-- Upload image tervalidasi + kompres WebP.
-- AJAX pencarian tari.
+## Deploy
+1. Import `sql/schema.sql`
+2. Upload source ke server aaPanel
+3. Set document root ke `public/`
+4. Aktifkan PHP 8+: `pdo_mysql`, `gd`, `fileinfo`
