@@ -1,35 +1,19 @@
-# Langit Biru Nusantara - Hari Tari Nasional Indonesia
+# Langit Biru Nusantara (Single File Edition)
 
-Portal budaya modern berbasis **PHP Native + MariaDB/MySQL** yang ringan untuk aaPanel, Nginx/OpenLiteSpeed, dan shared VPS.
+Semua logic aplikasi dipusatkan di **`public/index.php`** agar mudah deploy cepat di aaPanel shared hosting.
 
-## Fitur Utama
-- Landing page cinematic tema Langit Biru Nusantara.
-- Countdown Hari Tari Nasional.
-- Katalog Tari + pencarian AJAX ringan.
-- Peta Indonesia interaktif (SVG ringan).
-- Event festival + checkout tiket.
-- Simulasi pembayaran (QRIS dummy, transfer, e-wallet dummy).
-- Admin dashboard + CRUD Tari dan Event.
+## Konfigurasi Database (sesuai screenshot aaPanel)
+Edit baris paling atas `public/index.php`:
+- `$dbName='sql_pesonatari_site'`
+- `$dbUser='sql_pesonatari_site'`
+- `$dbPass='PASSWORD_DB_AAPANEL'`
 
-## Stack
-- PHP 8+
-- MariaDB/MySQL
-- Bootstrap 5 + Vanilla JS
-- Tanpa NodeJS dan framework berat
+## Deploy
+1. Import `sql/schema.sql` ke database.
+2. Upload project ke aaPanel.
+3. Set document root domain ke folder `public`.
+4. Pastikan PHP 8+ dengan extension: `pdo_mysql`, `gd`, `fileinfo`.
 
-## Struktur
-- `public/` : web root aaPanel
-- `app/` : konfigurasi, helper, views
-- `sql/schema.sql` : schema + seed data
-
-## Setup
-1. Import `sql/schema.sql`.
-2. Sesuaikan kredensial DB di `app/config/config.php`.
-3. Arahkan domain document root ke folder `public`.
-4. Pastikan extension PHP aktif: `pdo_mysql`, `gd`, `fileinfo`.
-
-## Optimasi yang digunakan
-- Gambar upload otomatis dikonversi WebP (quality 75).
-- Lazy loading image.
-- Asset CSS/JS minified tunggal.
-- Prepared statement PDO + index DB.
+## Catatan
+- Desain UI premium biru-cyan dibuat langsung inline agar 1 file inti.
+- Tetap menggunakan prepared statement, CSRF, validasi upload, WebP conversion, lazy load, AJAX ringan.

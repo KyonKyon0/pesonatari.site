@@ -1,70 +1,34 @@
 <?php
-require_once __DIR__ . '/../app/config/database.php';
-require_once __DIR__ . '/../app/helpers/common.php';
-$route = $_GET['r'] ?? 'home';
-csrf_check();
-
-function view($file, $data=[]){ extract($data); require __DIR__ . '/../app/views/' . $file . '.php'; }
-
-if ($route === 'home') {
-    $popular = db()->query("SELECT * FROM tari ORDER BY id DESC LIMIT 6")->fetchAll();
-    $events = db()->query("SELECT * FROM event ORDER BY tanggal ASC LIMIT 6")->fetchAll();
-    $topVote = db()->query("SELECT t.*, COUNT(v.id) vote_count FROM tari t LEFT JOIN vote v ON v.tari_id=t.id GROUP BY t.id ORDER BY vote_count DESC LIMIT 5")->fetchAll();
-    view('user/home', compact('popular','events','topVote'));
-    exit;
-}
-if ($route === 'tari') {
-    $q = trim($_GET['q'] ?? ''); $kategori=trim($_GET['kategori'] ?? '');
-    $page=(int)($_GET['page']??1); [$offset,$limit]=paginate($page,8);
-    $sql="SELECT * FROM tari WHERE 1=1"; $params=[];
-    if($q!==''){ $sql.=" AND nama_tari LIKE ?"; $params[]="%$q%"; }
-    if($kategori!==''){ $sql.=" AND kategori=?"; $params[]=$kategori; }
-    $sql.=" ORDER BY id DESC LIMIT $offset,$limit";
-    $stmt=db()->prepare($sql); $stmt->execute($params); $rows=$stmt->fetchAll();
-    if(isset($_GET['ajax'])){ header('Content-Type: application/json'); echo json_encode($rows); exit; }
-    view('user/tari', ['rows'=>$rows]); exit;
-}
-if ($route === 'vote' && $_SERVER['REQUEST_METHOD']==='POST') {
-    $stmt=db()->prepare('INSERT INTO vote (tari_id,session_key) VALUES (?,?)');
-    $stmt->execute([(int)$_POST['tari_id'], session_id()]);
-    redirect('?r=home#top-vote');
-}
-if ($route === 'event') { $rows=db()->query('SELECT * FROM event ORDER BY tanggal ASC')->fetchAll(); view('user/event',['rows'=>$rows]); exit; }
-if ($route === 'checkout' && $_SERVER['REQUEST_METHOD']==='POST') {
-    $stmt=db()->prepare('INSERT INTO tiket (event_id,nama,email,jumlah,total_harga,status) VALUES (?,?,?,?,?,?)');
-    $total=(int)$_POST['jumlah']*(int)$_POST['harga_tiket'];
-    $stmt->execute([(int)$_POST['event_id'],$_POST['nama'],$_POST['email'],(int)$_POST['jumlah'],$total,'pending']);
-    $id=(int)db()->lastInsertId(); redirect('?r=payment&id='.$id);
-}
-if ($route === 'payment') {
-    $id=(int)($_GET['id']??0);
-    if($_SERVER['REQUEST_METHOD']==='POST'){
-        $bukti=upload_image('bukti','bukti');
-        $stmt=db()->prepare('INSERT INTO pembayaran (tiket_id,metode,bukti,status) VALUES (?,?,?,?)');
-        $stmt->execute([$id,$_POST['metode'],$bukti,'menunggu']);
-        db()->prepare("UPDATE tiket SET status='menunggu verifikasi' WHERE id=?")->execute([$id]);
-        redirect('?r=payment&id='.$id.'&ok=1');
-    }
-    $stmt=db()->prepare('SELECT t.*,e.nama_event FROM tiket t JOIN event e ON e.id=t.event_id WHERE t.id=?');
-    $stmt->execute([$id]); $trx=$stmt->fetch(); view('user/payment',['trx'=>$trx]); exit;
-}
-if ($route === 'admin') { $t=(int)db()->query('SELECT COUNT(*) c FROM tari')->fetch()['c']; $e=(int)db()->query('SELECT COUNT(*) c FROM event')->fetch()['c']; $k=(int)db()->query('SELECT COUNT(*) c FROM tiket')->fetch()['c']; view('admin/dashboard',compact('t','e','k')); exit; }
-if ($route === 'admin_tari') { 
-    if($_SERVER['REQUEST_METHOD']==='POST'){
-        $gambar=upload_image('gambar','tari');
-        $stmt=db()->prepare('INSERT INTO tari (nama_tari,daerah,provinsi,kategori,deskripsi,sejarah,filosofi,properti_tari,pakaian_adat,alat_musik,video_url,gambar,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
-        $stmt->execute([$_POST['nama_tari'],$_POST['daerah'],$_POST['provinsi'],$_POST['kategori'],$_POST['deskripsi'],$_POST['sejarah'],$_POST['filosofi'],$_POST['properti_tari'],$_POST['pakaian_adat'],$_POST['alat_musik'],$_POST['video_url'],$gambar]);
-        redirect('?r=admin_tari');
-    }
-    $rows=db()->query('SELECT * FROM tari ORDER BY id DESC')->fetchAll(); view('admin/tari',['rows'=>$rows]); exit;
-}
-if ($route === 'delete_tari') { db()->prepare('DELETE FROM tari WHERE id=?')->execute([(int)$_GET['id']]); redirect('?r=admin_tari'); }
-if ($route === 'admin_event') {
-    if($_SERVER['REQUEST_METHOD']==='POST'){
-        $poster=upload_image('poster','event');
-        db()->prepare('INSERT INTO event (nama_event,lokasi,tanggal,harga_tiket,kuota,deskripsi,poster) VALUES (?,?,?,?,?,?,?)')->execute([$_POST['nama_event'],$_POST['lokasi'],$_POST['tanggal'],(int)$_POST['harga_tiket'],(int)$_POST['kuota'],$_POST['deskripsi'],$poster]);
-        redirect('?r=admin_event');
-    }
-    $rows=db()->query('SELECT * FROM event ORDER BY tanggal DESC')->fetchAll(); view('admin/event',['rows'=>$rows]); exit;
-}
-http_response_code(404); echo '404';
+/* Single-file edition: Langit Biru Nusantara */
+$dbHost='127.0.0.1';
+$dbName='sql_pesonatari_site';
+$dbUser='sql_pesonatari_site';
+$dbPass=''; // isi password aaPanel Anda
+$base='?r=';
+if(session_status()===PHP_SESSION_NONE){session_set_cookie_params(['httponly'=>true,'secure'=>isset($_SERVER['HTTPS']),'samesite'=>'Lax']);session_start();}
+function e($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
+function csrf(){if(empty($_SESSION['csrf']))$_SESSION['csrf']=bin2hex(random_bytes(32));return $_SESSION['csrf'];}
+if($_SERVER['REQUEST_METHOD']==='POST' && !hash_equals($_SESSION['csrf']??'',$_POST['csrf']??'')){http_response_code(419);exit('CSRF invalid');}
+$pdo=new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4",$dbUser,$dbPass,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false]);
+function upimg($field,$dir){if(empty($_FILES[$field]['name'])||$_FILES[$field]['error']!==UPLOAD_ERR_OK)return null;$ok=['jpg','jpeg','png','webp'];$ext=strtolower(pathinfo($_FILES[$field]['name'],PATHINFO_EXTENSION));if(!in_array($ext,$ok,true)||$_FILES[$field]['size']>2*1024*1024)return null;$name=bin2hex(random_bytes(8)).'.webp';$dst=__DIR__."/uploads/$dir/$name";if(!is_dir(dirname($dst)))mkdir(dirname($dst),0755,true);$img=@imagecreatefromstring(file_get_contents($_FILES[$field]['tmp_name']));if(!$img)return null;imagewebp($img,$dst,75);imagedestroy($img);return "uploads/$dir/$name";}
+$r=$_GET['r']??'home';
+if($r==='tari_ajax'){ $q=trim($_GET['q']??''); $st=$pdo->prepare('SELECT id,nama_tari,provinsi,gambar FROM tari WHERE nama_tari LIKE ? ORDER BY id DESC LIMIT 20');$st->execute(["%$q%"]);header('Content-Type: application/json');echo json_encode($st->fetchAll());exit; }
+if($r==='vote'&&$_SERVER['REQUEST_METHOD']==='POST'){ $pdo->prepare('INSERT INTO vote(tari_id,session_key) VALUES(?,?)')->execute([(int)$_POST['tari_id'],session_id()]);header('Location:?r=home#vote');exit; }
+if($r==='checkout'&&$_SERVER['REQUEST_METHOD']==='POST'){ $total=(int)$_POST['jumlah']*(int)$_POST['harga'];$pdo->prepare('INSERT INTO tiket(event_id,nama,email,jumlah,total_harga,status) VALUES(?,?,?,?,?,?)')->execute([(int)$_POST['event_id'],trim($_POST['nama']),trim($_POST['email']),(int)$_POST['jumlah'],$total,'pending']);header('Location:?r=payment&id='.$pdo->lastInsertId());exit;}
+if($r==='pay'&&$_SERVER['REQUEST_METHOD']==='POST'){ $id=(int)$_GET['id'];$b=upimg('bukti','bukti');$pdo->prepare('INSERT INTO pembayaran(tiket_id,metode,bukti,status) VALUES(?,?,?,?)')->execute([$id,$_POST['metode'],$b,'menunggu']);$pdo->prepare("UPDATE tiket SET status='menunggu verifikasi' WHERE id=?")->execute([$id]);header('Location:?r=payment&id='.$id.'&ok=1');exit;}
+if($r==='admin_tari_add'&&$_SERVER['REQUEST_METHOD']==='POST'){ $g=upimg('gambar','tari');$pdo->prepare('INSERT INTO tari(nama_tari,daerah,provinsi,kategori,deskripsi,sejarah,filosofi,properti_tari,pakaian_adat,alat_musik,video_url,gambar,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,NOW())')->execute([$_POST['nama_tari'],$_POST['daerah'],$_POST['provinsi'],$_POST['kategori'],$_POST['deskripsi'],$_POST['sejarah'],$_POST['filosofi'],$_POST['properti_tari'],$_POST['pakaian_adat'],$_POST['alat_musik'],$_POST['video_url'],$g]);header('Location:?r=admin');exit; }
+if($r==='admin_event_add'&&$_SERVER['REQUEST_METHOD']==='POST'){ $p=upimg('poster','event');$pdo->prepare('INSERT INTO event(nama_event,lokasi,tanggal,harga_tiket,kuota,deskripsi,poster) VALUES(?,?,?,?,?,?,?)')->execute([$_POST['nama_event'],$_POST['lokasi'],$_POST['tanggal'],(int)$_POST['harga_tiket'],(int)$_POST['kuota'],$_POST['deskripsi'],$p]);header('Location:?r=admin');exit; }
+$popular=$pdo->query('SELECT * FROM tari ORDER BY id DESC LIMIT 6')->fetchAll();$events=$pdo->query('SELECT * FROM event ORDER BY tanggal ASC LIMIT 8')->fetchAll();$vote=$pdo->query('SELECT t.id,t.nama_tari,COUNT(v.id) c FROM tari t LEFT JOIN vote v ON v.tari_id=t.id GROUP BY t.id ORDER BY c DESC LIMIT 5')->fetchAll();
+?><!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Langit Biru Nusantara</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><style>:root{--c1:#0a3f7e;--c2:#21d5ff;--c3:#e8f6ff}html{scroll-behavior:smooth}body{background:linear-gradient(180deg,#08294d,#1e5ea3 42%,#f6fcff);color:#102b4a}.hero{height:100vh;position:relative;overflow:hidden}.hero iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}.ov{position:absolute;inset:0;background:linear-gradient(160deg,rgba(7,44,89,.8),rgba(33,213,255,.35))}.glass{background:rgba(6,30,60,.35);backdrop-filter:blur(8px)}.btn-c{background:var(--c2);border:none;color:#033e64}.sec{padding:72px 0}.cardx{background:#ffffffea;border:1px solid #d6ebff}.map .p{fill:#84cfff;cursor:pointer;transition:.2s}.map .p:hover{fill:#27c4ff;filter:drop-shadow(0 0 8px #4dd9ff)}</style></head><body>
+<nav class="navbar navbar-expand-lg fixed-top glass"><div class="container"><a class="navbar-brand text-white" href="?r=home">Langit Biru Nusantara</a><div class="navbar-nav ms-auto"><a class="nav-link text-white" href="#tari">Tari</a><a class="nav-link text-white" href="#event">Festival</a><a class="nav-link text-white" href="?r=admin">Admin</a></div></div></nav>
+<section class="hero text-white d-flex align-items-center"><iframe src="https://www.youtube.com/embed/x8Kzn9x0j4c?autoplay=1&mute=1&loop=1&playlist=x8Kzn9x0j4c&controls=0" allow="autoplay"></iframe><div class="ov"></div><div class="container position-relative"><h1 class="display-4 fw-bold">Hari Tari Nasional Indonesia</h1><p class="lead">Gerakan Nusantara Untuk Masa Depan Budaya Indonesia</p><a href="#tari" class="btn btn-c me-2">Jelajahi Tari</a><a href="#event" class="btn btn-outline-light me-2">Lihat Festival</a><a href="#event" class="btn btn-light">Pesan Tiket</a></div></section>
+<div class="container sec"><div class="p-3 rounded bg-light-subtle">Countdown: <b id="cd" data-date="2026-11-20"></b></div></div>
+<section id="tari" class="container sec"><h2>Tari Populer</h2><input id="src" class="form-control my-3" placeholder="Cari Tari (AJAX)"><div id="tariList" class="row"><?php foreach($popular as $t):?><div class="col-md-4"><div class="card cardx mb-3"><img loading="lazy" src="<?=e($t['gambar']?:'https://picsum.photos/640/360')?>" class="card-img-top"><div class="card-body"><h5><?=e($t['nama_tari'])?></h5><small><?=e($t['provinsi'])?></small></div></div></div><?php endforeach;?></div></section>
+<section class="container sec"><h2>Peta Indonesia Interaktif</h2><svg viewBox="0 0 300 120" class="map w-100"><rect class="p" data-n="Sumatera" x="10" y="40" width="70" height="20"/><rect class="p" data-n="Jawa" x="90" y="70" width="50" height="12"/><rect class="p" data-n="Kalimantan" x="120" y="35" width="60" height="25"/><rect class="p" data-n="Sulawesi" x="190" y="35" width="40" height="30"/><rect class="p" data-n="Papua" x="240" y="45" width="50" height="20"/></svg><div id="mInfo" class="alert alert-info mt-3">Klik provinsi untuk info tari.</div></section>
+<section id="event" class="container sec"><h2>Event Festival</h2><div class="row"><?php foreach($events as $e):?><div class="col-md-4"><div class="card cardx mb-3"><img loading="lazy" src="<?=e($e['poster']?:'https://picsum.photos/640/360?2')?>" class="card-img-top"><div class="card-body"><h5><?=e($e['nama_event'])?></h5><p><?=e($e['lokasi'])?> | <?=e($e['tanggal'])?></p><form method="post" action="?r=checkout"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="event_id" value="<?=$e['id']?>"><input type="hidden" name="harga" value="<?=$e['harga_tiket']?>"><input name="nama" class="form-control mb-2" required placeholder="Nama"><input name="email" class="form-control mb-2" required><input type="number" name="jumlah" value="1" min="1" class="form-control mb-2"><button class="btn btn-c w-100">Pesan Tiket</button></form></div></div></div><?php endforeach;?></div></section>
+<section id="vote" class="container sec"><h2>Top Vote Tari</h2><?php foreach($vote as $v):?><form method="post" action="?r=vote" class="d-flex justify-content-between bg-white p-2 mb-2 rounded"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="tari_id" value="<?=$v['id']?>"><span><?=e($v['nama_tari'])?> (<?=$v['c']?> vote)</span><button class="btn btn-sm btn-c">Vote</button></form><?php endforeach;?></section>
+<?php if($r==='payment'&&isset($_GET['id'])): $id=(int)$_GET['id'];$s=$pdo->prepare('SELECT t.*,e.nama_event FROM tiket t JOIN event e ON e.id=t.event_id WHERE t.id=?');$s->execute([$id]);$trx=$s->fetch();?><section class="container sec"><h2>Pembayaran Tiket</h2><p><b><?=e($trx['nama_event'])?></b> - Total Rp<?=number_format((int)$trx['total_harga'])?></p><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=QRIS-DUMMY-LANGIT-BIRU" loading="lazy"><form method="post" action="?r=pay&id=<?=$id?>" enctype="multipart/form-data" class="mt-3"><input type="hidden" name="csrf" value="<?=csrf()?>"><select name="metode" class="form-select mb-2"><option>QRIS Dummy</option><option>Transfer Bank</option><option>E-Wallet Dummy</option></select><input type="file" name="bukti" required class="form-control mb-2"><button class="btn btn-c">Upload Bukti</button></form><?php if(isset($_GET['ok']))echo '<div class="alert alert-success mt-2">Pembayaran terkirim.</div>';?></section><?php endif;?>
+<?php if($r==='admin'):?><section class="container sec"><h2>Admin Dashboard</h2><div class="row"><div class="col-md-6"><h5>Tambah Tari</h5><form method="post" action="?r=admin_tari_add" enctype="multipart/form-data"><input type="hidden" name="csrf" value="<?=csrf()?>"><?php foreach(['nama_tari','daerah','provinsi','kategori','deskripsi','sejarah','filosofi','properti_tari','pakaian_adat','alat_musik','video_url'] as $f):?><input name="<?=$f?>" class="form-control mb-2" placeholder="<?=$f?>" required><?php endforeach;?><input type="file" name="gambar" class="form-control mb-2"><button class="btn btn-c">Simpan Tari</button></form></div><div class="col-md-6"><h5>Tambah Event</h5><form method="post" action="?r=admin_event_add" enctype="multipart/form-data"><input type="hidden" name="csrf" value="<?=csrf()?>"><input name="nama_event" class="form-control mb-2" placeholder="nama_event" required><input name="lokasi" class="form-control mb-2" required><input type="date" name="tanggal" class="form-control mb-2" required><input name="harga_tiket" type="number" class="form-control mb-2" required><input name="kuota" type="number" class="form-control mb-2" required><textarea name="deskripsi" class="form-control mb-2" required></textarea><input type="file" name="poster" class="form-control mb-2"><button class="btn btn-c">Simpan Event</button></form></div></div></section><?php endif;?>
+<footer class="py-5 bg-dark text-white"><div class="container">© 2026 Langit Biru Nusantara</div></footer>
+<script>document.querySelectorAll('.map .p').forEach(x=>x.onclick=()=>mInfo.textContent='Wilayah '+x.dataset.n+': klik Jelajahi Tari untuk detail.');const cd=document.getElementById('cd');setInterval(()=>{const d=new Date(cd.dataset.date)-new Date();if(d<0)return cd.textContent='Sudah dimulai';cd.textContent=Math.floor(d/86400000)+' hari '+Math.floor((d%86400000)/3600000)+' jam';},1000);const src=document.getElementById('src');src?.addEventListener('input',async()=>{const r=await fetch('?r=tari_ajax&q='+encodeURIComponent(src.value));const j=await r.json();tariList.innerHTML=j.map(x=>`<div class='col-md-3'><div class='card cardx mb-3'><img loading='lazy' src='${x.gambar||"https://picsum.photos/640/360"}' class='card-img-top'><div class='card-body'><h6>${x.nama_tari}</h6><small>${x.provinsi}</small></div></div></div>`).join('');});</script>
+</body></html>
