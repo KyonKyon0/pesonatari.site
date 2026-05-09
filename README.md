@@ -1,19 +1,23 @@
-# Langit Biru Nusantara (Single File Edition)
+# Langit Biru Nusantara
 
-Semua logic aplikasi dipusatkan di **`public/index.php`** agar mudah deploy cepat di aaPanel shared hosting.
+Portal budaya fullstack ringan (PHP Native + MariaDB) siap aaPanel.
 
-## Konfigurasi Database (sesuai screenshot aaPanel)
-Edit baris paling atas `public/index.php`:
-- `$dbName='sql_pesonatari_site'`
-- `$dbUser='sql_pesonatari_site'`
-- `$dbPass='PASSWORD_DB_AAPANEL'`
+## Kredensial DB (sesuai foto aaPanel)
+- Database: `sql_pesonatari_site`
+- Username: `sql_pesonatari_site`
+- Password: `dcbf4afe83baa8`
 
-## Deploy
-1. Import `sql/schema.sql` ke database.
-2. Upload project ke aaPanel.
-3. Set document root domain ke folder `public`.
-4. Pastikan PHP 8+ dengan extension: `pdo_mysql`, `gd`, `fileinfo`.
+Atur di `app/config/config.php`.
 
-## Catatan
-- Desain UI premium biru-cyan dibuat langsung inline agar 1 file inti.
-- Tetap menggunakan prepared statement, CSRF, validasi upload, WebP conversion, lazy load, AJAX ringan.
+## Deploy aaPanel/XAMPP
+1. Import `sql/schema.sql`.
+2. Upload folder project.
+3. Set document root ke `public/`.
+4. Aktifkan PHP 8+ extension: `pdo_mysql`, `gd`, `fileinfo`.
+
+## Optimasi
+- CSS/JS minified terpisah.
+- Prepared statement + index DB.
+- Lazy loading image.
+- Upload image tervalidasi + kompres WebP.
+- AJAX pencarian tari.
