@@ -38,7 +38,7 @@ $regions = [
       <h1>Langit Biru Nusantara</h1>
       <button id="menuBtn" class="menu-btn">☰ Menu</button><nav>
         <a href="#tari">Tari</a>
-        <a href="#peta">Peta</a>
+        
         <a href="#event">Festival</a>
         <a href="tiket.php">Tiket</a>
       </nav>
@@ -73,20 +73,9 @@ $regions = [
     </div>
   </section>
 
-  <section id="tari" class="wrap section"><h3>Tari Populer (Auto Carousel)</h3><div id="tariTrack" class="carousel-track"><?php foreach($popular as $t): ?><article class="card"><img src="<?=htmlspecialchars($t['gambar'])?>" loading="lazy"><div><h4><?=htmlspecialchars($t['nama_tari'])?></h4><small><?=htmlspecialchars($t['provinsi'])?> • <?=htmlspecialchars($t['kategori'])?></small></div></article><?php endforeach; ?></div></section>
+  <section id="tari" class="wrap section"><h3>Tari Populer (Auto Carousel)</h3><div class="carousel-marquee"><div class="marquee-track"><?php for($i=0;$i<2;$i++): foreach($popular as $t): ?><article class="card"><img src="<?=htmlspecialchars($t['gambar'])?>" loading="lazy"><div><h4><?=htmlspecialchars($t['nama_tari'])?></h4><small><?=htmlspecialchars($t['provinsi'])?> • <?=htmlspecialchars($t['kategori'])?></small></div></article><?php endforeach; endfor; ?></div></div></section>
 
-  <section id="peta" class="wrap section">
-    <h3>Peta Budaya Indonesia (Google Maps + Titik Pulau)</h3>
-    <div class="mapbox">
-      <iframe src="https://maps.google.com/maps?q=Indonesia&t=k&z=4&ie=UTF8&iwloc=&output=embed" loading="lazy"></iframe>
-      <div class="dots"><button class='dot' data-k='all'>● ALL</button>
-        <?php foreach($regions as $r): ?>
-          <button class="dot" data-k="<?=$r['k']?>">● <?=$r['n']?></button>
-        <?php endforeach; ?>
-      </div>
-      <div id="pulseInfo" class="info">Klik titik pulau untuk melihat tari perwakilan dan penjelasannya.</div>
-    </div>
-  </section>
+  
 
   <section class="wrap section">
     <h3>Perwakilan Tari Tiap Pulau</h3>
