@@ -73,7 +73,7 @@ $regions = [
     </div>
   </section>
 
-  <section id="tari" class="wrap section"><h3>Tari Populer (Auto Carousel)</h3><div class="carousel-marquee"><div class="marquee-track"><?php for($i=0;$i<2;$i++): foreach($popular as $t): ?><article class="card"><img src="<?=htmlspecialchars($t['gambar'])?>" loading="lazy"><div><h4><?=htmlspecialchars($t['nama_tari'])?></h4><small><?=htmlspecialchars($t['provinsi'])?> • <?=htmlspecialchars($t['kategori'])?></small></div></article><?php endforeach; endfor; ?></div></div></section>
+  <section id="tari" class="wrap section"><h3>Tari Populer</h3><div class="slider" id="slider"><button class="slide-btn prev" id="prevSlide">‹</button><div class="slides" id="slides"><?php foreach($popular as $t): ?><article class="card slide"><img src="<?=htmlspecialchars($t['gambar'])?>" loading="lazy"><div><h4><?=htmlspecialchars($t['nama_tari'])?></h4><small><?=htmlspecialchars($t['provinsi'])?> • <?=htmlspecialchars($t['kategori'])?></small></div></article><?php endforeach; ?></div><button class="slide-btn next" id="nextSlide">›</button></div><div class="dots-nav" id="dotsNav"></div></section>
 
   
 
